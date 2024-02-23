@@ -27,6 +27,7 @@
       "fmv"
       "mac"
       "memidx"
+      "mempair"
     ];
 
     # https://nixos.wiki/wiki/Build_flags
