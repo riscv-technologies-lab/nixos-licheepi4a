@@ -37,7 +37,6 @@
   # and need to add these three lines to the end of the generated config file:
   #   CONFIG_DMIID=y
   #   CONFIG_VECTOR=n
-  #   CONFIG_THEAD_ISA=n
   configfile = ./revyos_config;
   
   extraMeta.branch = "lp4a";

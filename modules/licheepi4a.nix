@@ -1,17 +1,24 @@
-{ lib, pkgs, pkgsKernel, ... }: {
-
+{
+  lib,
+  pkgs,
+  ...
+}: {
   # =========================================================================
   #      Board specific configuration
   # =========================================================================
 
   boot = {
-    kernelPackages = pkgsKernel.linuxPackages_thead;
-    
+    kernelPackages = pkgs.linuxPackages_thead;
+
     initrd.includeDefaultModules = false;
     initrd.availableKernelModules = lib.mkForce [
-      "ext4" "sd_mod" "mmc_block" "spi_nor"
+      "ext4"
+      "sd_mod"
+      "mmc_block"
+      "spi_nor"
       "xhci_hcd"
-      "usbhid" "hid_generic"
+      "usbhid"
+      "hid_generic"
     ];
   };
 
@@ -49,14 +56,6 @@
     ];
   };
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.05"; # Did you read the comment?
-
   # =========================================================================
   #      Base NixOS Configuration
   # =========================================================================
@@ -65,30 +64,20 @@
     experimental-features = ["nix-command" "flakes"];
   };
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
-    git      # used by nix flakes
+    git
     curl
-
     neofetch
-    lm_sensors  # `sensors`
-    btop     # replacement of htop/nmon
-
-    # Peripherals
+    lm_sensors
+    htop
     mtdutils
     i2c-tools
     minicom
   ];
 
-  # Enable the OpenSSH daemon.
   services.openssh = {
-    enable = lib.mkDefault true;
-    settings = {
-      X11Forwarding = lib.mkDefault true;
-      PasswordAuthentication = lib.mkDefault true;
-    };
-    openFirewall = lib.mkDefault true;
+    enable = true;
   };
 
+  system.stateVersion = "24.05";
 }

@@ -159,7 +159,6 @@ See [Debug.md](./Debug.md)
 ## Custom Deployment
 
 You can use this flake as an input to build your own configuration.
-Here is an example configuration that you can use as a starting point: [Demo - Deployment](./demo)
 
 ## How this repo works
 
@@ -183,5 +182,5 @@ And other efforts to bring NixOS to RISC-V:
 - https://github.com/zhaofengli/nixos-riscv64
 - https://github.com/NickCao/nixos-riscv
 
-Special thanks to @NickCao,  @revyos, @chainsx and @zhaofengli.
+Special thanks to @NickCao, @revyos, @chainsx and @zhaofengli.
 
