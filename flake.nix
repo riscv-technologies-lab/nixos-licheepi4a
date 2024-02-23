@@ -3,13 +3,15 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = {
     self,
     nixpkgs,
+    flake-utils,
     ...
-  } @ inputs: let
+  }: let
     # Custom T-HEAD extensions implemented in gcc-13 by the following patches:
     # - https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=8351535f20b52cf332791f60d2bf22a025833516
     # - https://gcc.gnu.org/gcc-13/changes.html
@@ -51,76 +53,46 @@
       gcc = {inherit arch abi;};
     };
 
-    pkgsCross = import nixpkgs {
-      localSystem = "x86_64-linux";
-      crossSystem = crossSystem;
-      overlays = [overlays.lp4a];
-    };
+    pkgsCrossFor = system:
+      (import nixpkgs) {
+        localSystem.system = system;
+        crossSystem = crossSystem;
+        overlays = [overlays.build];
+        crossOverlays = [overlays.lp4a];
+      };
 
-    pkgsHost = import nixpkgs {
-      system = "x86_64-linux";
-      overlays = [overlays.host];
-    };
-  in {
-    overlays = {
-      default = overlays.lp4a;
-      lp4a = import ./nix/cross-overlay.nix {inherit (pkgsHost) thead-qemu;};
-      host = import ./nix/host-overlay.nix;
-    };
+    systems = ["x86_64-linux" "x86_64-darwin" "i686-linux" "aarch64-linux"];
+  in
+    {
+      overlays = {
+        default = overlays.lp4a;
+        lp4a = import ./nix/overlays/cross.nix;
+        build = import ./nix/overlays/build.nix;
+      };
 
-    nixosConfigurations.lp4a-cross = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
+      nixosConfigurations.lp4a-cross = (pkgsCrossFor "x86_64-linux").nixos {
+        imports = [
+          ./modules/licheepi4a.nix
+          ./modules/sd-image/sd-image-lp4a.nix
+          ./modules/user-group.nix
+        ];
+      };
+    }
+    // flake-utils.lib.eachSystem systems
+    (system: let
+      pkgsCross = pkgsCrossFor system;
+      buildPkgs = pkgsCross.buildPackages;
+    in {
+      packages = {
+        thead-qemu = buildPkgs.thead-qemu;
+        uboot = pkgsCross.thead-uboot;
+        sdImage = self.nixosConfigurations.lp4a-cross.config.system.build.sdImage;
+      };
 
-      modules = [
-        {
-          nixpkgs = {
-            crossSystem = crossSystem;
-            overlays = [overlays.lp4a];
-          };
-        }
-
-        ./modules/licheepi4a.nix
-        ./modules/sd-image/sd-image-lp4a.nix
-        ./modules/user-group.nix
-      ];
-    };
-
-    packages.x86_64-linux = {
-      thead-qemu = pkgsHost.thead-qemu;
-      uboot = pkgsCross.callPackage ./pkgs/u-boot {};
-      sdImage = self.nixosConfigurations.lp4a-cross.config.system.build.sdImage;
-    };
-
-    # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
-    devShells.x86_64-linux.fhsEnv =
-      # The code here is mainly copied from:
-      # - https://nixos.wiki/wiki/Linux_kernel#Embedded_Linux_Cross-compile_xconfig_and_menuconfig
-      (pkgsHost.buildFHSUserEnv {
-        name = "kernel-build-env";
-        targetPkgs = pkgs_: (with pkgs_;
-          [
-            # we need theses packages to run `make menuconfig` successfully.
-            pkg-config
-            ncurses
-
-            pkgsCross.stdenv.cc
-            gcc
-          ]
-          ++ pkgsHost.linux.nativeBuildInputs);
-        runScript = pkgsHost.writeScript "init.sh" ''
-          # set the cross-compilation environment variables.
-          export CROSS_COMPILE=riscv64-unknown-linux-gnu-
-          export ARCH=riscv
-          export PKG_CONFIG_PATH="${pkgsHost.ncurses.dev}/lib/pkgconfig:"
-
-          # Set the CFLAGS and CPPFLAGS as described here:
-          # - https://github.com/graysky2/kernel_compiler_patch#alternative-way-to-define-a--march-option-without-this-patch
-          export KCFLAGS=' -march=${arch} -mabi=${abi}'
-          export KCPPFLAGS=' -march=${arch} -mabi=${abi}'
-
-          exec bash
-        '';
-      })
-      .env;
-  };
+      # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
+      devShells = {
+        fhsEnv = import ./nix/shells/fhs.nix {inherit buildPkgs abi arch;};
+        default = buildPkgs.callPackage ./nix/shells/dev.nix {};
+      };
+    });
 }

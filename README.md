@@ -167,6 +167,11 @@ The basic idea of this repo is to use revyos's kernel, u-boot and opensbi, with 
 
 ## See Also
 
+Cross-compilation with nixpkgs:
+
+- https://matthewbauer.us/slides/always-be-cross-compiling.pdf
+- https://artemis.sh/2023/06/06/cross-compile-nixos-for-great-good.html
+
 RevyOS's kernel, u-boot and opensbi:
 
 - https://github.com/revyos/thead-kernel.git

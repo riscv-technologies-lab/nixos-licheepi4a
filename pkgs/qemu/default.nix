@@ -29,19 +29,7 @@
   meson,
   autoPatchelfHook,
   python311Packages,
-  smartcardSupport ? false,
-  spiceSupport ? false,
-  openGLSupport ? false,
-  virglSupport ? false,
-  vncSupport ? false,
-  gtkSupport ? false,
-  sdlSupport ? false,
-  pulseSupport ? false,
-  pipewireSupport ? false,
-  smbdSupport ? false,
-  seccompSupport ? false,
-  enableDocs ? false,
-  hostCpuTargets ? [],
+  ...
 }:
 stdenv.mkDerivation {
   pname = "thead-qemu";
