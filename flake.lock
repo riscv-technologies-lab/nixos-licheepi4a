@@ -18,25 +18,7 @@
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
-        "thead-kernel": "thead-kernel"
-      }
-    },
-    "thead-kernel": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1708266405,
-        "narHash": "sha256-LZS0zPYWzfNP3t7IwLCyq6jtGkgEi6J4Z1e4rlZKw5o=",
-        "owner": "revyos",
-        "repo": "thead-kernel",
-        "rev": "6f712a1d7f4069a89123f1d2f43e7daa502b4471",
-        "type": "github"
-      },
-      "original": {
-        "owner": "revyos",
-        "ref": "lpi4a",
-        "repo": "thead-kernel",
-        "type": "github"
+        "nixpkgs": "nixpkgs"
       }
     }
   },

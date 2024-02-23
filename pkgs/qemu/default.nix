@@ -48,8 +48,8 @@ stdenv.mkDerivation {
   version = "6.0.94";
 
   src = fetchFromGitHub {
-    owner = "revyos";
-    repo = "qemu";
+    owner = "riscv-technologies-lab";
+    repo = "thead-qemu";
     rev = "ab8f84892a89feea60f1bb24432ff58ce6d2885c";
     sha256 = "sha256-Lo+X/s75O6yTKCS3YQEBe8CpUizMHTE1HNRRcI722mg=";
     fetchSubmodules = true;

@@ -3,12 +3,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    # According to https://github.com/sipeed/LicheePi4A/blob/pre-view/.gitmodules
-    thead-kernel = {
-      url = "github:revyos/thead-kernel/lpi4a";
-      flake = false;
-    };
   };
 
   outputs = {
@@ -70,10 +64,7 @@
   in {
     overlays = {
       default = overlays.lp4a;
-      lp4a = import ./nix/cross-overlay.nix {
-        inherit inputs;
-        inherit (pkgsHost) thead-qemu;
-      };
+      lp4a = import ./nix/cross-overlay.nix {inherit (pkgsHost) thead-qemu;};
       host = import ./nix/host-overlay.nix;
     };
 

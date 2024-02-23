@@ -1,17 +1,19 @@
 {
   stdenv,
-  fetchurl,
+  fetchFromGitHub,
 }:
 stdenv.mkDerivation {
   pname = "light_aon_fpga-firmware";
-  version = "unstable-2023-08-04";
+  version = "1.4.2";
 
-  src = fetchurl {
-    url = "https://github.com/chainsx/fedora-riscv-builder/raw/f35095c9f45b42addb1b0d0e9185ca8ff04ed870/firmware/light_aon_fpga.bin"; # tag: 20230804-1242
-    hash = "sha256-cIFaWDbiX0nNzlhkhhKapjGeN64dblFE1DxZh01kV5s=";
+  src = fetchFromGitHub {
+    owner = "riscv-technologies-lab";
+    repo = "th1520-boot-firmware";
+    rev = "c1b04c6b38cbf9e71a9b6091ab5cf9974d586cd6";
+    sha256 = "sha256-noPwJlV0krqHnyM2c5K3HTr0efhvOIVicWvZpywN3Hk=";
   };
 
   buildCommand = ''
-    install -Dm444 $src $out/lib/firmware/light_aon_fpga.bin
+    install -Dm444 $src/addons/boot/light_aon_fpga.bin $out/lib/firmware/light_aon_fpga.bin
   '';
 }

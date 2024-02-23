@@ -1,13 +1,13 @@
-{
-  inputs,
-  thead-qemu,
-}: self: super: let
+{thead-qemu}: self: super: let
+  # Make this particular warning non-fatal, since when cross-compiling this
+  # warning results in extra warnings for error-handling code. This is either a false
+  # positive from gcc13 or a bug in systemd. Neither is particularly critical, since
+  # this code is not in the hot path.
   overrideFormatWError = final: prev: {
     env.NIX_CFLAGS_COMPILE = prev.env.NIX_CFLAGS_COMPILE + " -Wno-error=format-overflow";
   };
 in {
   linuxPackages_thead = super.linuxPackagesFor (super.callPackage ../pkgs/kernel {
-    src = inputs.thead-kernel;
     kernelPatches = with super.kernelPatches; [
       bridge_stp_helper
       request_key_helper
