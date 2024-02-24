@@ -61,7 +61,7 @@
         crossOverlays = [overlays.lp4a];
       };
 
-    systems = ["x86_64-linux" "x86_64-darwin" "i686-linux" "aarch64-linux"];
+    systems = ["x86_64-linux" "x86_64-darwin" "aarch64-linux" "riscv64-linux"];
   in
     {
       overlays = {
@@ -90,9 +90,14 @@
       };
 
       # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
-      devShells = {
-        fhsEnv = import ./nix/shells/fhs.nix {inherit buildPkgs abi arch;};
-        default = buildPkgs.callPackage ./nix/shells/dev.nix {};
-      };
+      devShells =
+        {
+          default = buildPkgs.callPackage ./nix/shells/dev.nix {};
+        }
+        // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") (let
+          pkgs = import nixpkgs {inherit system;};
+        in {
+          fhsEnv = import ./nix/shells/fhs.nix {inherit pkgsCross pkgs abi arch;};
+        });
     });
 }
