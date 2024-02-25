@@ -91,6 +91,7 @@
     (system: let
       pkgsCross = pkgsCrossFor system;
       buildPkgs = pkgsCross.buildPackages;
+      pkgs = import nixpkgs {inherit system;};
     in {
       packages = {
         thead-qemu = buildPkgs.thead-qemu;
@@ -101,12 +102,10 @@
       # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
       devShells =
         {
-          default = buildPkgs.callPackage ./nix/shells/dev.nix {};
+          default = pkgs.callPackage ./nix/shells/dev.nix {};
         }
-        // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") (let
-          pkgs = import nixpkgs {inherit system;};
-        in {
+        // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
           fhsEnv = import ./nix/shells/fhs.nix {inherit pkgsCross pkgs abi arch;};
-        });
+        };
     });
 }
