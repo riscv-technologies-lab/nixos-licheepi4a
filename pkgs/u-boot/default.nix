@@ -9,8 +9,8 @@
   src = fetchFromGitHub {
     owner = "riscv-technologies-lab";
     repo = "thead-u-boot";
-    rev = "990e122d26d1ef94f4e0e1bbf5d7df58e8393eee";
-    sha256 = "sha256-JB2hVrTDpUc0iI+IhNzLcWs8XhJCY8vK4KgEiDsmxiA=";
+    rev = "43a2b1f1a1a06527f585ac504ecc78f42e0e6830";
+    sha256 = "sha256-kLr+MLOeQPpAVwvtjNUCHYVj2qBD8NwtBQXifgQEQKY=";
   };
 
   defconfig = "light_lpi4a_defconfig";
