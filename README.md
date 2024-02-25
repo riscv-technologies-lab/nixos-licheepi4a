@@ -41,13 +41,15 @@ nix build .#uboot -L --show-trace
 
 After the build is complete, the u-boot will be in `result/u-boot-with-spl.bin`, please copy it to another place for later use.
 
+
+Add the binary cache to `~/.config/nix/nix.conf`:
+```
+substituters = https://attic.aeronas.ru/lp4a
+trusted-public-keys = lp4a:Om07le0y+rXgyAo7tM2gWoWVKok18uqrxI7GB9DLtIE=
+```
+
 Build sdImage:
-
 ```shell
-# I have uploaded the build cache to cachix, you can use it to speed up builds.
-# which may take a long time without my cache, about 2 hours on my machine
-nix run nixpkgs#cachix -- use licheepi4a
-
 nix build .#sdImage -L --show-trace
 ```
 
