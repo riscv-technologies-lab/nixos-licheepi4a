@@ -77,6 +77,15 @@
           ./modules/user-group.nix
         ];
       };
+
+      nixConfig = {
+        extra-substituters = [
+          "https://attic.aeronas.ru/lp4a"
+        ];
+        extra-trusted-public-keys = [
+          "lp4a:Om07le0y+rXgyAo7tM2gWoWVKok18uqrxI7GB9DLtIE="
+        ];
+      };
     }
     // flake-utils.lib.eachSystem systems
     (system: let
