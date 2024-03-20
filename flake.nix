@@ -6,63 +6,76 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    flake-utils,
-    ...
-  }: let
-    # Custom T-HEAD extensions implemented in gcc-13 by the following patches:
-    # - https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=8351535f20b52cf332791f60d2bf22a025833516
-    # - https://gcc.gnu.org/gcc-13/changes.html
-    # Other extensions might be buggy, xtheadcondmov and xtheadmempair lead to
-    # internal compiler errors.
-    # TODO: Reproduce the issue and file upstream bug.
-    # Possibly related bugs:
-    # - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109760
-    # - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110095
-    thead_extensions = [
-      "ba"
-      "bb"
-      "bs"
-      "fmemidx"
-      "fmv"
-      "mac"
-      "memidx"
-    ];
+  nixConfig = {
+    extra-substituters = [ "https://attic.aeronas.ru/lp4a" ];
+    extra-trusted-public-keys = [ "lp4a:8++F7yYs9QL64DDjoZa2jWiJw2rXV+XaFdFXcOp4T84=" ];
+  };
 
-    # https://nixos.wiki/wiki/Build_flags
-    # This option equals to add `-march=${arch}` into CFLAGS.
-    # CFLAGS will be used as the command line arguments for the gcc/clang.
-    # NOTE: CFLAGS is not used by the kernel build system! so this would not work for the kernel build.
-    arch =
-      "rv64gc_"
-      + (builtins.concatStringsSep "_"
-        (builtins.map (e: "xthead${e}") thead_extensions));
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
+    let
+      # Custom T-HEAD extensions implemented in gcc-13 by the following patches:
+      # - https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=8351535f20b52cf332791f60d2bf22a025833516
+      # - https://gcc.gnu.org/gcc-13/changes.html
+      # Other extensions might be buggy, xtheadcondmov and xtheadmempair lead to
+      # internal compiler errors.
+      # TODO: Reproduce the issue and file upstream bug.
+      # Possibly related bugs:
+      # - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109760
+      # - https://gcc.gnu.org/bugzilla/show_bug.cgi?id=110095
+      thead_extensions = [
+        "ba"
+        "bb"
+        "bs"
+        "fmemidx"
+        "fmv"
+        "mac"
+        "memidx"
+      ];
 
-    # The same as `-mabi=${abi}` in CFLAGS.
-    # Related docs:
-    # - https://github.com/riscv-non-isa/riscv-toolchain-conventions/blob/master/README.mkd#specifying-the-target-abi-with--mabi
-    # - https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/cc-wrapper/default.nix
-    abi = "lp64d";
+      # https://nixos.wiki/wiki/Build_flags
+      # This option equals to add `-march=${arch}` into CFLAGS.
+      # CFLAGS will be used as the command line arguments for the gcc/clang.
+      # NOTE: CFLAGS is not used by the kernel build system! so this would not work for the kernel build.
+      arch =
+        "rv64gc_" + (builtins.concatStringsSep "_" (builtins.map (e: "xthead${e}") thead_extensions));
 
-    inherit (self.outputs) overlays;
+      # The same as `-mabi=${abi}` in CFLAGS.
+      # Related docs:
+      # - https://github.com/riscv-non-isa/riscv-toolchain-conventions/blob/master/README.mkd#specifying-the-target-abi-with--mabi
+      # - https://github.com/NixOS/nixpkgs/blob/master/pkgs/build-support/cc-wrapper/default.nix
+      abi = "lp64d";
 
-    crossSystem = {
-      config = "riscv64-unknown-linux-gnu";
-      gcc = {inherit arch abi;};
-    };
+      inherit (self.outputs) overlays;
 
-    pkgsCrossFor = system:
-      (import nixpkgs) {
-        localSystem.system = system;
-        crossSystem = crossSystem;
-        overlays = [overlays.build];
-        crossOverlays = [overlays.lp4a];
+      crossSystem = {
+        config = "riscv64-unknown-linux-gnu";
+        gcc = {
+          inherit arch abi;
+        };
       };
 
-    systems = ["x86_64-linux" "x86_64-darwin" "aarch64-linux" "riscv64-linux"];
-  in
+      pkgsCrossFor =
+        system:
+        (import nixpkgs) {
+          localSystem.system = system;
+          crossSystem = crossSystem;
+          overlays = [ overlays.build ];
+          crossOverlays = [ overlays.lp4a ];
+        };
+
+      systems = [
+        "x86_64-linux"
+        "x86_64-darwin"
+        "aarch64-linux"
+        "riscv64-linux"
+      ];
+    in
     {
       overlays = {
         default = overlays.lp4a;
@@ -77,35 +90,36 @@
           ./modules/user-group.nix
         ];
       };
-
-      nixConfig = {
-        extra-substituters = [
-          "https://attic.aeronas.ru/lp4a"
-        ];
-        extra-trusted-public-keys = [
-          "lp4a:Om07le0y+rXgyAo7tM2gWoWVKok18uqrxI7GB9DLtIE="
-        ];
-      };
     }
-    // flake-utils.lib.eachSystem systems
-    (system: let
-      pkgsCross = pkgsCrossFor system;
-      buildPkgs = pkgsCross.buildPackages;
-      pkgs = import nixpkgs {inherit system;};
-    in {
-      packages = {
-        thead-qemu = buildPkgs.thead-qemu;
-        uboot = pkgsCross.thead-uboot;
-        sdImage = self.nixosConfigurations.lp4a-cross.config.system.build.sdImage;
-      };
-
-      # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
-      devShells =
-        {
-          default = pkgs.callPackage ./nix/shells/dev.nix {};
-        }
-        // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
-          fhsEnv = import ./nix/shells/fhs.nix {inherit pkgsCross pkgs abi arch;};
+    // flake-utils.lib.eachSystem systems (
+      system:
+      let
+        pkgsCross = pkgsCrossFor system;
+        buildPkgs = pkgsCross.buildPackages;
+        pkgs = import nixpkgs { inherit system; };
+      in
+      {
+        packages = {
+          thead-qemu = buildPkgs.thead-qemu;
+          uboot = pkgsCross.thead-uboot;
+          sdImage = self.nixosConfigurations.lp4a-cross.config.system.build.sdImage;
         };
-    });
+
+        # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
+        devShells =
+          {
+            default = pkgs.callPackage ./nix/shells/dev.nix { };
+          }
+          // nixpkgs.lib.optionalAttrs (system == "x86_64-linux") {
+            fhsEnv = import ./nix/shells/fhs.nix {
+              inherit
+                pkgsCross
+                pkgs
+                abi
+                arch
+                ;
+            };
+          };
+      }
+    );
 }

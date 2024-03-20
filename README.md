@@ -44,8 +44,8 @@ After the build is complete, the u-boot will be in `result/u-boot-with-spl.bin`,
 
 Add the binary cache to `~/.config/nix/nix.conf`:
 ```
-substituters = https://attic.aeronas.ru/lp4a
-trusted-public-keys = lp4a:Om07le0y+rXgyAo7tM2gWoWVKok18uqrxI7GB9DLtIE=
+extra-substituters = https://attic.aeronas.ru/lp4a
+extra-trusted-public-keys = lp4a:8++F7yYs9QL64DDjoZa2jWiJw2rXV+XaFdFXcOp4T84=
 ```
 
 Build sdImage:
