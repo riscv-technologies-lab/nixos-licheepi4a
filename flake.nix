@@ -105,6 +105,10 @@
           sdImage = self.nixosConfigurations.lp4a-cross.config.system.build.sdImage;
         };
 
+        legacyPackages = {
+          inherit pkgsCross;
+        };
+
         # Use `nix develop .#fhsEnv` to enter the fhs test environment defined here.
         devShells =
           {
